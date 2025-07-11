@@ -132,6 +132,6 @@ iconLookup.DebugThemeInfo("hicolor")
 ## Installation
 
 ```bash
-go get github.com/codelif/xdg-icons-go
+go get github.com/codelif/xdgicons
 ```
 
