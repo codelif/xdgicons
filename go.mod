@@ -1,4 +1,4 @@
-module github.com/codelif/xdg-icons-go
+module github.com/codelif/xdgicons
 
 go 1.24.5
 
