@@ -1,13 +1,39 @@
 package xdgicons
 
-type Icon struct {
-	Path string
-}
-
 type IconLookup interface {
-  Lookup(icon string) (string, error)
+	Lookup(icon string) (string, error)
 	FindIcon(icon string, size int, scale int) (*Icon, error)
 	FindBestIcon(iconList []string, size int, scale int) (*Icon, error)
+}
+
+type Icon struct {
+	// Short name of the icon
+	Name string
+
+	// Full path of the icon
+	Path string
+
+	// Unscaled size of the icon
+	//
+	// set to 0, if unknown
+	Size int
+
+	// Scale of the icon
+	//
+	// set to 0, if unknown
+	Scale int
+
+	// Minimum (unscaled) size that the icon
+	// can be scaled to
+	//
+	// set to 0, if unknown
+	MinSize int
+
+	// Maximum (unscaled) size that the icon
+	// can be scaled to
+	//
+	// set to 0, if unknown
+	MaxSize int
 }
 
 // Theme info extracted from index.theme

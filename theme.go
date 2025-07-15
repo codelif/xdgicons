@@ -49,6 +49,10 @@ func cleanDconfOutput(raw string) string {
 	return strings.TrimPrefix(strings.TrimSuffix(strings.Trim(raw, "\n "), "'"), "'")
 }
 
+func (il *iconLookup) CurrentTheme() string {
+  return il.theme
+}
+
 
 func (il *iconLookup) readThemeIndex(theme, indexPath string) (*ThemeInfo, error) {
 	index, err := ini.Load(indexPath)

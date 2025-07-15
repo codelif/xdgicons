@@ -43,17 +43,16 @@ func (il *iconLookup) FindIcon(iconName string, size int, scale int) (*Icon, err
 		return icon, nil
 	}
 
-  // hicolor is always searched in findIconHelper since readIndex adds it to Inherits
+	// hicolor is always searched in findIconHelper since readIndex adds it to Inherits
 	// icon, err = il.findIconHelper(iconName, size, scale, "hicolor")
 	// if err == nil {
 	// 	return icon, nil
 	// }
-  
 
-  // searching adwaita as well... since some apps (blueman-applet) 
-  // asks for bluetooth-symbolic which is not in hicolor
-  // or should I make an exception just for this?
-  // or just let dbusmenu implementations handle this?
+	// searching adwaita as well... since some apps (blueman-applet)
+	// asks for bluetooth-symbolic which is not in hicolor
+	// or should I make an exception just for this?
+	// or just let dbusmenu implementations handle this?
 	icon, err = il.findIconHelper(iconName, size, scale, "Adwaita")
 	if err == nil {
 		return icon, nil
@@ -96,7 +95,15 @@ func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme str
 					iconPath := path.Join(directory, theme, subdir, iconName+"."+extension)
 					// fmt.Printf("[XDGICONS]: Searching for %q\n", iconPath)
 					if il.fileExists(directory, iconPath) {
-						return &Icon{iconPath}, nil
+						iconInfo := themeInfo.directoryMap[subdir]
+						return &Icon{
+							Name:    iconName,
+							Path:    iconPath,
+							Size:    iconInfo.Size,
+							MinSize: iconInfo.MinSize,
+							MaxSize: iconInfo.MaxSize,
+							Scale:   iconInfo.Scale,
+						}, nil
 					}
 				}
 			}
@@ -105,6 +112,7 @@ func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme str
 
 	minimalSize := math.MaxInt
 	var closestFilename string
+	var closestSubdir string
 
 	for _, subdir := range append(themeInfo.Directories, themeInfo.ScaledDirectories...) {
 		for _, directory := range GetBaseDirs() {
@@ -113,13 +121,22 @@ func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme str
 				if il.fileExists(directory, iconPath) && il.directorySizeDistance(themeInfo, subdir, size, scale) < minimalSize {
 					// fmt.Printf("[XDGICONS]: Searching for %q\n", iconPath)
 					closestFilename = iconPath
+					closestSubdir = subdir
 					minimalSize = il.directorySizeDistance(themeInfo, subdir, size, scale)
 				}
 			}
 		}
 	}
 	if closestFilename != "" {
-		return &Icon{closestFilename}, nil
+		iconInfo := themeInfo.directoryMap[closestSubdir]
+		return &Icon{
+			Name:    iconName,
+			Path:    closestFilename,
+			Size:    iconInfo.Size,
+			MinSize: iconInfo.MinSize,
+			MaxSize: iconInfo.MaxSize,
+			Scale:   iconInfo.Scale,
+		}, nil
 	}
 
 	return nil, fmt.Errorf("icon %q not found", iconName)
@@ -133,7 +150,10 @@ func (il *iconLookup) lookupFallbackIcon(iconName string) (*Icon, error) {
 
 			// fmt.Printf("[XDGICONS]: Searching for %q\n", iconPath)
 			if il.fileExists(directory, iconPath) {
-				return &Icon{iconPath}, nil
+				return &Icon{
+					Name: iconName,
+					Path: iconPath,
+				}, nil
 			}
 		}
 	}
