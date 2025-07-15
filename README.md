@@ -32,12 +32,12 @@ func main() {
     iconLookup := xdgicons.NewIconLookup()
     
     // Find an icon
-    iconPath, err := iconLookup.Lookup("firefox")
+    icon, err := iconLookup.Lookup("firefox")
     if err != nil {
         log.Fatal(err)
     }
     
-    fmt.Printf("Firefox icon: %s\n", iconPath)
+    fmt.Printf("Firefox icon: path=%s, maxsize=%d\n", icon.Path, icon.MaxSize)
     // Output: Firefox icon: /usr/share/icons/hicolor/48x48/apps/firefox.png
 }
 ```
@@ -46,14 +46,31 @@ func main() {
 
 ```go
 // Simple lookup with default size (48px@1)
-iconPath, err := iconLookup.Lookup("folder")
+icon, err := iconLookup.Lookup("folder")
 
 // Full control over size and scale
-icon, err := iconLookup.FindIcon("text-editor", 32, 2) // 32px at 2x scale
+icon, err = iconLookup.FindIcon("text-editor", 32, 2) // 32px at 2x scale
 if err == nil {
     fmt.Println(icon.Path)
 }
 
+```
+
+### Lookup Options
+
+```go
+iconLookup := xdgicons.NewIconLookupWithConfig(xdgicons.LookupConfig{
+    Theme: "Papirus", // if not set uses DefaultTheme()
+    FallbackTheme: "Adwaita", // if no icons found while searching with Papirus, none by default
+    Extensions: []string{"png", "svg"} // only searc for png and svg files
+})
+
+icon, err := iconLookup.Lookup("bluetooth-symbolic")
+if err != nil {
+    fmt.Printf("error finding icon: %v\n", err)
+}else {
+    fmt.Printf("bluetooth-symbolic: %s\n", icon.Path)
+}
 ```
 
 
