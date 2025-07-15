@@ -1,7 +1,6 @@
 package xdgicons
 
 
-
 import (
 	"fmt"
 	"image"
@@ -18,11 +17,11 @@ import (
 
 // IconRenderer handles rendering icons to different formats
 type IconRenderer struct {
-	iconLookup *IconLookup
+	iconLookup IconLookup
 }
 
 // NewIconRenderer creates a new icon renderer
-func NewIconRenderer(iconLookup *IconLookup) *IconRenderer {
+func NewIconRenderer(iconLookup IconLookup) *IconRenderer {
 	return &IconRenderer{
 		iconLookup: iconLookup,
 	}
@@ -36,7 +35,7 @@ func (ir *IconRenderer) RenderIconToPNG(iconName string, size int) (image.Image,
 		return nil, fmt.Errorf("icon not found: %w", err)
 	}
 
-	return ir.RenderFileToPNG(iconPath, size)
+	return ir.RenderFileToPNG(iconPath.Path, size)
 }
 
 // RenderFileToPNG renders an icon file to PNG format at the specified size
@@ -141,7 +140,7 @@ func (ir *IconRenderer) replaceSymbolicColors(svgContent string, foregroundColor
 		"#ffffff": hexColor, // White
 		"currentColor": hexColor, // CSS currentColor
 	}
-
+  
 	modifiedSVG := svgContent
 	for oldColor, newColor := range replacements {
 		modifiedSVG = strings.ReplaceAll(modifiedSVG, oldColor, newColor)
@@ -218,10 +217,11 @@ func (ir *IconRenderer) SaveImageToPNG(img image.Image, outputPath string) error
 // RenderIconWithFallback renders an icon with smart fallbacks and returns the image
 func (ir *IconRenderer) RenderIconWithFallback(iconName string, size int, symbolicColor *color.Color) (image.Image, string, error) {
 	// Try to find the icon
-	iconPath, err := ir.iconLookup.FindBestIcon([]string{iconName}, size, 1)
+	icon, err := ir.iconLookup.FindBestIcon([]string{iconName}, size, 1)
 	if err != nil {
 		return nil, "", fmt.Errorf("icon not found: %w", err)
 	}
+  iconPath := icon.Path
 
 	// Check if it's a symbolic icon and we have a color specified
 	if strings.HasSuffix(iconName, "-symbolic") && symbolicColor != nil && strings.HasSuffix(iconPath, ".svg") {
