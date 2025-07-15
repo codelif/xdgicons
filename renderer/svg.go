@@ -1,5 +1,6 @@
-package xdgicons
-
+// simple svg renderer
+// still AI slop, needs improvement
+package renderer
 
 import (
 	"fmt"
@@ -11,17 +12,18 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/codelif/xdgicons"
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
 )
 
 // IconRenderer handles rendering icons to different formats
 type IconRenderer struct {
-	iconLookup IconLookup
+	iconLookup xdgicons.IconLookup
 }
 
 // NewIconRenderer creates a new icon renderer
-func NewIconRenderer(iconLookup IconLookup) *IconRenderer {
+func NewIconRenderer(iconLookup xdgicons.IconLookup) *IconRenderer {
 	return &IconRenderer{
 		iconLookup: iconLookup,
 	}
