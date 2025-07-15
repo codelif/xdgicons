@@ -43,6 +43,11 @@ func (il *iconLookup) FindIcon(iconName string, size int, scale int) (*Icon, err
 		return icon, nil
 	}
 
+	icon, err = il.findIconHelper(iconName, size, scale, "Adwaita")
+	if err == nil {
+		return icon, nil
+	}
+
 	icon, err = il.findIconHelper(iconName, size, scale, "hicolor")
 	if err == nil {
 		return icon, nil
