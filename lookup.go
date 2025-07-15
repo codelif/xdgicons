@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"path"
+	"strings"
 	"sync"
 	"time"
 )
@@ -60,7 +61,7 @@ func (il *iconLookup) FindIcon(iconName string, size int, scale int) (Icon, erro
 }
 
 func (il *iconLookup) findIconHelper(iconName string, size int, scale int, theme string) (Icon, error) {
-	fmt.Printf("Searching icon=%q size=%d scale=%d theme=%q\n", iconName, size, scale, theme)
+	// fmt.Printf("Searching icon=%q size=%d scale=%d theme=%q\n", iconName, size, scale, theme)
 	themeInfo, err := il.getThemeInfo(theme)
 	if err != nil {
 		return Icon{}, err
@@ -236,5 +237,52 @@ func (il *iconLookup) directorySizeDistance(themeInfo ThemeInfo, subdir string, 
 }
 
 func (il *iconLookup) FindBestIcon(iconList []string, size int, scale int) (Icon, error) {
-	return Icon{}, nil
+
+	icon, err := il.findBestIconHelper(iconList, size, scale, il.theme)
+	if err == nil {
+		return icon, nil
+	}
+
+	// hicolor is always searched in findIconHelper since readIndex adds it to Inherits
+
+	// searching adwaita as well... since some apps (blueman-applet)
+	// asks for bluetooth-symbolic which is not in hicolor
+	// or should I make an exception just for this?
+	// or just let dbusmenu implementations handle this?
+	icon, err = il.findBestIconHelper(iconList, size, scale, "Adwaita")
+	if err == nil {
+		return icon, nil
+	}
+
+  for _, iconName := range iconList {
+    icon, err := il.lookupFallbackIcon(iconName)
+    if err == nil {
+      return icon, nil
+    }
+  }
+	return Icon{}, fmt.Errorf("icons \"%s\" not found", strings.Join(iconList, ","))
+}
+
+func (il *iconLookup) findBestIconHelper(iconList []string, size int, scale int, theme string) (Icon, error) {
+	// fmt.Printf("Searching icon=%q size=%d scale=%d theme=%q\n", iconName, size, scale, theme)
+	themeInfo, err := il.getThemeInfo(theme)
+	if err != nil {
+		return Icon{}, err
+	}
+
+	for _, iconName := range iconList {
+		icon, err := il.lookupIcon(iconName, size, scale, theme)
+		if err == nil {
+			return icon, nil
+		}
+	}
+
+	for _, parent := range themeInfo.Inherits {
+		icon, err := il.findBestIconHelper(iconList, size, scale, parent)
+		if err == nil {
+			return icon, nil
+		}
+	}
+
+	return Icon{}, fmt.Errorf("icons \"%s\" not found", strings.Join(iconList, ","))
 }
