@@ -11,6 +11,7 @@ import (
 
 type iconLookup struct {
 	theme                   string
+	fallbackTheme           string
 	extensions              []string
 	themeInfoCache          map[string]ThemeInfo
 	dirCache                map[string]*baseDirIconCache
@@ -19,16 +20,49 @@ type iconLookup struct {
 }
 
 func NewIconLookup() IconLookup {
+	return NewIconLookupWithConfig(LookupConfig{})
+}
+
+type LookupConfig struct {
+	// Icon Theme to use.
+	//
+	// If unset, then uses default theme
+	Theme string
+
+	// Fallback Theme to look into,
+	// if no icon was found using the canonical algorithm
+	//
+	// If unset, does not search for a fallback theme
+	FallbackTheme string
+
+	// Icon file extensions to search for.
+	//
+	// If unset, defaults to ["png", "svg", "xpm"]
+	Extensions []string
+}
+
+func NewIconLookupWithConfig(cfg LookupConfig) IconLookup {
 	il := &iconLookup{
-		theme:                   DefaultTheme(),
 		themeInfoCache:          make(map[string]ThemeInfo),
 		dirCache:                make(map[string]*baseDirIconCache),
-		extensions:              []string{"png", "svg", "xpm"},
 		cacheValidCheckInterval: 5 * time.Second,
 	}
 
-	il.createInitialCache()
+	if cfg.Theme == "" {
+		il.theme = DefaultTheme()
+	} else {
+		il.theme = cfg.Theme
+	}
 
+	il.fallbackTheme = cfg.FallbackTheme
+
+	if len(cfg.Extensions) == 0 {
+		il.extensions = []string{"png", "svg", "xpm"}
+	} else {
+		il.extensions = cfg.Extensions
+	}
+
+	il.createInitialCache()
 	return il
 }
 
@@ -42,22 +76,23 @@ func (il *iconLookup) FindIcon(iconName string, size int, scale int) (Icon, erro
 	if err == nil {
 		return icon, nil
 	}
-
 	// hicolor is always searched in findIconHelper since readIndex adds it to Inherits
-	// icon, err = il.findIconHelper(iconName, size, scale, "hicolor")
-	// if err == nil {
-	// 	return icon, nil
-	// }
 
-	// searching adwaita as well... since some apps (blueman-applet)
-	// asks for bluetooth-symbolic which is not in hicolor
-	// or should I make an exception just for this?
-	// or just let dbusmenu implementations handle this?
-	icon, err = il.findIconHelper(iconName, size, scale, "Adwaita")
+	icon, err = il.lookupFallbackIcon(iconName)
 	if err == nil {
 		return icon, nil
 	}
-	return il.lookupFallbackIcon(iconName)
+
+	// searching a fallback theme as well... since some apps (blueman-applet)
+	// asks for bluetooth-symbolic which is not in hicolor (so specifying adwaita
+	// can be useful)
+	if il.fallbackTheme != "" {
+		icon, err = il.findIconHelper(iconName, size, scale, il.fallbackTheme)
+		if err == nil {
+			return icon, nil
+		}
+	}
+	return Icon{}, fmt.Errorf("icon %q not found", iconName)
 }
 
 func (il *iconLookup) findIconHelper(iconName string, size int, scale int, theme string) (Icon, error) {
@@ -245,21 +280,24 @@ func (il *iconLookup) FindBestIcon(iconList []string, size int, scale int) (Icon
 
 	// hicolor is always searched in findIconHelper since readIndex adds it to Inherits
 
-	// searching adwaita as well... since some apps (blueman-applet)
-	// asks for bluetooth-symbolic which is not in hicolor
-	// or should I make an exception just for this?
-	// or just let dbusmenu implementations handle this?
-	icon, err = il.findBestIconHelper(iconList, size, scale, "Adwaita")
-	if err == nil {
-		return icon, nil
+	// doing a fallback lookup in pixmaps directory
+	for _, iconName := range iconList {
+		icon, err := il.lookupFallbackIcon(iconName)
+		if err == nil {
+			return icon, nil
+		}
 	}
 
-  for _, iconName := range iconList {
-    icon, err := il.lookupFallbackIcon(iconName)
-    if err == nil {
-      return icon, nil
-    }
-  }
+	// searching a fallback theme as well... since some apps (blueman-applet)
+	// asks for bluetooth-symbolic which is not in hicolor (so specifying adwaita
+	// can be useful)
+	if il.fallbackTheme != "" {
+		icon, err = il.findBestIconHelper(iconList, size, scale, il.fallbackTheme)
+		if err == nil {
+			return icon, nil
+		}
+	}
+
 	return Icon{}, fmt.Errorf("icons \"%s\" not found", strings.Join(iconList, ","))
 }
 
