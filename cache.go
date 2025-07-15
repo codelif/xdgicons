@@ -14,7 +14,7 @@ type baseDirIconCache struct {
 	lastStat time.Time
 }
 
-func (il *iconLookup) createInitialCache() {
+func (il *IconLookup) createInitialCache() {
 	il.mu.Lock()
 	defer il.mu.Unlock()
 
@@ -23,7 +23,7 @@ func (il *iconLookup) createInitialCache() {
 	}
 }
 
-func (il *iconLookup) cacheBaseDirectory(dirPath string) error {
+func (il *IconLookup) cacheBaseDirectory(dirPath string) error {
 	stat, err := os.Stat(dirPath)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (il *iconLookup) cacheBaseDirectory(dirPath string) error {
 }
 
 
-func (il *iconLookup) getThemeInfo(theme string) (ThemeInfo, error) {
+func (il *IconLookup) getThemeInfo(theme string) (ThemeInfo, error) {
 	il.mu.RLock()
 	themeInfo, ok := il.themeInfoCache[theme]
 	il.mu.RUnlock()
@@ -84,11 +84,11 @@ func (il *iconLookup) getThemeInfo(theme string) (ThemeInfo, error) {
 	return ThemeInfo{}, fmt.Errorf("theme %q not found", theme)
 }
 
-func (il *iconLookup) clearThemeInfoCache() {
+func (il *IconLookup) clearThemeInfoCache() {
   il.themeInfoCache = make(map[string]ThemeInfo)
 }
 
-func (il *iconLookup) shouldRefreshCache(baseDir string, cacheEntry *baseDirIconCache, now time.Time) bool {
+func (il *IconLookup) shouldRefreshCache(baseDir string, cacheEntry *baseDirIconCache, now time.Time) bool {
 	if cacheEntry == nil {
 		return true
 	}

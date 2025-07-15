@@ -49,12 +49,19 @@ func cleanDconfOutput(raw string) string {
 	return strings.TrimPrefix(strings.TrimSuffix(strings.Trim(raw, "\n "), "'"), "'")
 }
 
-func (il *iconLookup) CurrentTheme() string {
+// returns current theme
+func (il *IconLookup) Theme() string {
   return il.theme
 }
 
+// returns fallback theme
+func (il *IconLookup) FallbackTheme() string {
+  return il.fallbackTheme
+}
 
-func (il *iconLookup) readThemeIndex(theme, indexPath string) (*ThemeInfo, error) {
+
+
+func (il *IconLookup) readThemeIndex(theme, indexPath string) (*ThemeInfo, error) {
 	index, err := ini.Load(indexPath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file: %v", err)

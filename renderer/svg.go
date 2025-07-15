@@ -19,11 +19,11 @@ import (
 
 // IconRenderer handles rendering icons to different formats
 type IconRenderer struct {
-	iconLookup xdgicons.IconLookup
+	iconLookup *xdgicons.IconLookup
 }
 
 // NewIconRenderer creates a new icon renderer
-func NewIconRenderer(iconLookup xdgicons.IconLookup) *IconRenderer {
+func NewIconRenderer(iconLookup *xdgicons.IconLookup) *IconRenderer {
 	return &IconRenderer{
 		iconLookup: iconLookup,
 	}

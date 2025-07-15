@@ -9,17 +9,19 @@ import (
 	"time"
 )
 
-type iconLookup struct {
+type IconLookup struct {
 	theme                   string
 	fallbackTheme           string
 	extensions              []string
 	themeInfoCache          map[string]ThemeInfo
 	dirCache                map[string]*baseDirIconCache
 	cacheValidCheckInterval time.Duration
+	defaultSize             int
+	defaultScale            int
 	mu                      sync.RWMutex
 }
 
-func NewIconLookup() IconLookup {
+func NewIconLookup() *IconLookup {
 	return NewIconLookupWithConfig(LookupConfig{})
 }
 
@@ -39,10 +41,20 @@ type LookupConfig struct {
 	//
 	// If unset, defaults to ["png", "svg", "xpm"]
 	Extensions []string
+
+	// Default size to be used in [Lookup]
+	//
+	// If unset or 0, defaults to 48
+	DefaultSize int
+
+	// Default scale to be used in [Lookup]
+	//
+	// If unset or 0, defaults to 1
+	DefaultScale int
 }
 
-func NewIconLookupWithConfig(cfg LookupConfig) IconLookup {
-	il := &iconLookup{
+func NewIconLookupWithConfig(cfg LookupConfig) *IconLookup {
+	il := &IconLookup{
 		themeInfoCache:          make(map[string]ThemeInfo),
 		dirCache:                make(map[string]*baseDirIconCache),
 		cacheValidCheckInterval: 5 * time.Second,
@@ -62,16 +74,30 @@ func NewIconLookupWithConfig(cfg LookupConfig) IconLookup {
 		il.extensions = cfg.Extensions
 	}
 
+	if cfg.DefaultSize == 0 {
+		il.defaultSize = 48
+	} else {
+		il.defaultSize = cfg.DefaultSize
+	}
+
+	if cfg.DefaultScale == 0 {
+		il.defaultScale = 1
+	} else {
+		il.defaultScale = cfg.DefaultScale
+	}
+
 	il.createInitialCache()
 	return il
 }
 
-func (il *iconLookup) Lookup(iconName string) (Icon, error) {
+// Finds a specified icon, defaults size to 48 and scale to 1
+func (il *IconLookup) Lookup(iconName string) (Icon, error) {
 	icon, err := il.FindIcon(iconName, 48, 1)
 	return icon, err
 }
 
-func (il *iconLookup) FindIcon(iconName string, size int, scale int) (Icon, error) {
+// Finds a specified icon with required size and scale
+func (il *IconLookup) FindIcon(iconName string, size int, scale int) (Icon, error) {
 	icon, err := il.findIconHelper(iconName, size, scale, il.theme)
 	if err == nil {
 		return icon, nil
@@ -95,7 +121,7 @@ func (il *iconLookup) FindIcon(iconName string, size int, scale int) (Icon, erro
 	return Icon{}, fmt.Errorf("icon %q not found", iconName)
 }
 
-func (il *iconLookup) findIconHelper(iconName string, size int, scale int, theme string) (Icon, error) {
+func (il *IconLookup) findIconHelper(iconName string, size int, scale int, theme string) (Icon, error) {
 	// fmt.Printf("Searching icon=%q size=%d scale=%d theme=%q\n", iconName, size, scale, theme)
 	themeInfo, err := il.getThemeInfo(theme)
 	if err != nil {
@@ -117,7 +143,7 @@ func (il *iconLookup) findIconHelper(iconName string, size int, scale int, theme
 	return Icon{}, fmt.Errorf("icon %q not found", iconName)
 }
 
-func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme string) (Icon, error) {
+func (il *IconLookup) lookupIcon(iconName string, size int, scale int, theme string) (Icon, error) {
 	themeInfo, err := il.getThemeInfo(theme)
 	if err != nil {
 		return Icon{}, err
@@ -177,7 +203,7 @@ func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme str
 	return Icon{}, fmt.Errorf("icon %q not found", iconName)
 }
 
-func (il *iconLookup) lookupFallbackIcon(iconName string) (Icon, error) {
+func (il *IconLookup) lookupFallbackIcon(iconName string) (Icon, error) {
 
 	for _, directory := range GetBaseDirs() {
 		for _, extension := range il.extensions {
@@ -196,7 +222,7 @@ func (il *iconLookup) lookupFallbackIcon(iconName string) (Icon, error) {
 	return Icon{}, fmt.Errorf("icon %q not found", iconName)
 }
 
-func (il *iconLookup) fileExists(baseDir, iconPath string) bool {
+func (il *IconLookup) fileExists(baseDir, iconPath string) bool {
 	il.mu.RLock()
 	cacheEntry, exists := il.dirCache[baseDir]
 	il.mu.RUnlock()
@@ -225,7 +251,7 @@ func (il *iconLookup) fileExists(baseDir, iconPath string) bool {
 
 	return cacheEntry.files[iconPath]
 }
-func (il *iconLookup) directoryMatchesSize(themeInfo ThemeInfo, subdir string, iconSize int, iconScale int) bool {
+func (il *IconLookup) directoryMatchesSize(themeInfo ThemeInfo, subdir string, iconSize int, iconScale int) bool {
 	subdirInfo := themeInfo.directoryMap[subdir]
 
 	if subdirInfo.Scale != iconScale {
@@ -244,7 +270,7 @@ func (il *iconLookup) directoryMatchesSize(themeInfo ThemeInfo, subdir string, i
 	return false // this should be unreachable
 }
 
-func (il *iconLookup) directorySizeDistance(themeInfo ThemeInfo, subdir string, iconSize int, iconScale int) int {
+func (il *IconLookup) directorySizeDistance(themeInfo ThemeInfo, subdir string, iconSize int, iconScale int) int {
 	subdirInfo := themeInfo.directoryMap[subdir]
 
 	switch subdirInfo.Type {
@@ -271,7 +297,9 @@ func (il *iconLookup) directorySizeDistance(themeInfo ThemeInfo, subdir string, 
 	return 0 // this should be unreachable
 }
 
-func (il *iconLookup) FindBestIcon(iconList []string, size int, scale int) (Icon, error) {
+// Finds the first available icon in iconList with the required size and scale.
+// Searches in the order of listing.
+func (il *IconLookup) FindBestIcon(iconList []string, size int, scale int) (Icon, error) {
 
 	icon, err := il.findBestIconHelper(iconList, size, scale, il.theme)
 	if err == nil {
@@ -301,7 +329,7 @@ func (il *iconLookup) FindBestIcon(iconList []string, size int, scale int) (Icon
 	return Icon{}, fmt.Errorf("icons \"%s\" not found", strings.Join(iconList, ","))
 }
 
-func (il *iconLookup) findBestIconHelper(iconList []string, size int, scale int, theme string) (Icon, error) {
+func (il *IconLookup) findBestIconHelper(iconList []string, size int, scale int, theme string) (Icon, error) {
 	// fmt.Printf("Searching icon=%q size=%d scale=%d theme=%q\n", iconName, size, scale, theme)
 	themeInfo, err := il.getThemeInfo(theme)
 	if err != nil {
