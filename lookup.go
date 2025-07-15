@@ -31,13 +31,12 @@ func NewIconLookup() IconLookup {
 	return il
 }
 
-// testing old API
-func (il *iconLookup) Lookup(iconName string) (string, error) {
+func (il *iconLookup) Lookup(iconName string) (Icon, error) {
 	icon, err := il.FindIcon(iconName, 48, 1)
-	return icon.Path, err
+	return icon, err
 }
 
-func (il *iconLookup) FindIcon(iconName string, size int, scale int) (*Icon, error) {
+func (il *iconLookup) FindIcon(iconName string, size int, scale int) (Icon, error) {
 	icon, err := il.findIconHelper(iconName, size, scale, il.theme)
 	if err == nil {
 		return icon, nil
@@ -60,11 +59,11 @@ func (il *iconLookup) FindIcon(iconName string, size int, scale int) (*Icon, err
 	return il.lookupFallbackIcon(iconName)
 }
 
-func (il *iconLookup) findIconHelper(iconName string, size int, scale int, theme string) (*Icon, error) {
+func (il *iconLookup) findIconHelper(iconName string, size int, scale int, theme string) (Icon, error) {
 	fmt.Printf("Searching icon=%q size=%d scale=%d theme=%q\n", iconName, size, scale, theme)
 	themeInfo, err := il.getThemeInfo(theme)
 	if err != nil {
-		return nil, err
+		return Icon{}, err
 	}
 
 	icon, err := il.lookupIcon(iconName, size, scale, theme)
@@ -79,13 +78,13 @@ func (il *iconLookup) findIconHelper(iconName string, size int, scale int, theme
 		}
 	}
 
-	return nil, fmt.Errorf("icon %q not found", iconName)
+	return Icon{}, fmt.Errorf("icon %q not found", iconName)
 }
 
-func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme string) (*Icon, error) {
+func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme string) (Icon, error) {
 	themeInfo, err := il.getThemeInfo(theme)
 	if err != nil {
-		return nil, err
+		return Icon{}, err
 	}
 
 	for _, subdir := range append(themeInfo.Directories, themeInfo.ScaledDirectories...) {
@@ -96,7 +95,7 @@ func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme str
 					// fmt.Printf("[XDGICONS]: Searching for %q\n", iconPath)
 					if il.fileExists(directory, iconPath) {
 						iconInfo := themeInfo.directoryMap[subdir]
-						return &Icon{
+						return Icon{
 							Name:    iconName,
 							Path:    iconPath,
 							Size:    iconInfo.Size,
@@ -129,7 +128,7 @@ func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme str
 	}
 	if closestFilename != "" {
 		iconInfo := themeInfo.directoryMap[closestSubdir]
-		return &Icon{
+		return Icon{
 			Name:    iconName,
 			Path:    closestFilename,
 			Size:    iconInfo.Size,
@@ -139,10 +138,10 @@ func (il *iconLookup) lookupIcon(iconName string, size int, scale int, theme str
 		}, nil
 	}
 
-	return nil, fmt.Errorf("icon %q not found", iconName)
+	return Icon{}, fmt.Errorf("icon %q not found", iconName)
 }
 
-func (il *iconLookup) lookupFallbackIcon(iconName string) (*Icon, error) {
+func (il *iconLookup) lookupFallbackIcon(iconName string) (Icon, error) {
 
 	for _, directory := range GetBaseDirs() {
 		for _, extension := range il.extensions {
@@ -150,7 +149,7 @@ func (il *iconLookup) lookupFallbackIcon(iconName string) (*Icon, error) {
 
 			// fmt.Printf("[XDGICONS]: Searching for %q\n", iconPath)
 			if il.fileExists(directory, iconPath) {
-				return &Icon{
+				return Icon{
 					Name: iconName,
 					Path: iconPath,
 				}, nil
@@ -158,7 +157,7 @@ func (il *iconLookup) lookupFallbackIcon(iconName string) (*Icon, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("icon %q not found", iconName)
+	return Icon{}, fmt.Errorf("icon %q not found", iconName)
 }
 
 func (il *iconLookup) fileExists(baseDir, iconPath string) bool {
@@ -236,6 +235,6 @@ func (il *iconLookup) directorySizeDistance(themeInfo ThemeInfo, subdir string, 
 	return 0 // this should be unreachable
 }
 
-func (il *iconLookup) FindBestIcon(iconList []string, size int, scale int) (*Icon, error) {
-	return nil, nil
+func (il *iconLookup) FindBestIcon(iconList []string, size int, scale int) (Icon, error) {
+	return Icon{}, nil
 }

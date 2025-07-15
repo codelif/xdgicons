@@ -1,11 +1,18 @@
 package xdgicons
 
 type IconLookup interface {
-	Lookup(icon string) (string, error)
-	FindIcon(icon string, size int, scale int) (*Icon, error)
-	FindBestIcon(iconList []string, size int, scale int) (*Icon, error)
+  // Finds a specified icon, defaults size to 48 and scale to 1
+	Lookup(iconName string) (Icon, error)
+
+  // Finds a specified icon with required size and scale
+	FindIcon(iconName string, size int, scale int) (Icon, error)
+
+  // Finds the first available icon in iconList with the required size and scale.
+  // Searches in the order of listing.
+	FindBestIcon(iconList []string, size int, scale int) (Icon, error)
 }
 
+// Found Icon
 type Icon struct {
 	// Short name of the icon
 	Name string
