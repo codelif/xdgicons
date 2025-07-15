@@ -45,7 +45,7 @@ func (il *iconLookup) cacheBaseDirectory(dirPath string) error {
 		return err
 	}
   
-  fmt.Println("caching Base Dir")
+  // fmt.Println("caching Base Dir")
   il.clearThemeInfoCache()
 	il.dirCache[dirPath] = &baseDirIconCache{
 		files:    files,

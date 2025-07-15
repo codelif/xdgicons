@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path"
+	"slices"
 	"strings"
 
 	"gopkg.in/ini.v1"
@@ -76,14 +77,15 @@ func (il *iconLookup) readThemeIndex(theme, indexPath string) (*ThemeInfo, error
 		directoryMap: make(map[string]SubDirIconInfo),
 	}
 
-	if theme != "hicolor" {
-		themeInfo.Inherits = []string{"hicolor"}
-	}
 
 	inheritsKey, err := iconThemeSection.GetKey("Inherits")
 	if err == nil {
 		themeInfo.Inherits = inheritsKey.Strings(",")
 	}
+
+  if theme != "hicolor" && !slices.Contains(themeInfo.Inherits, "hicolor") {
+    themeInfo.Inherits = slices.Insert(themeInfo.Inherits, len(themeInfo.Inherits), "hicolor")
+  }
 
 	scaledDirectorys, err := iconThemeSection.GetKey("ScaledDirectories")
 	if err == nil {

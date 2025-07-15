@@ -43,16 +43,21 @@ func (il *iconLookup) FindIcon(iconName string, size int, scale int) (*Icon, err
 		return icon, nil
 	}
 
+  // hicolor is always searched in findIconHelper since readIndex adds it to Inherits
+	// icon, err = il.findIconHelper(iconName, size, scale, "hicolor")
+	// if err == nil {
+	// 	return icon, nil
+	// }
+  
+
+  // searching adwaita as well... since some apps (blueman-applet) 
+  // asks for bluetooth-symbolic which is not in hicolor
+  // or should I make an exception just for this?
+  // or just let dbusmenu implementations handle this?
 	icon, err = il.findIconHelper(iconName, size, scale, "Adwaita")
 	if err == nil {
 		return icon, nil
 	}
-
-	icon, err = il.findIconHelper(iconName, size, scale, "hicolor")
-	if err == nil {
-		return icon, nil
-	}
-
 	return il.lookupFallbackIcon(iconName)
 }
 
