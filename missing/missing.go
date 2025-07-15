@@ -1,4 +1,6 @@
-package xdgicons
+// for generating opinionated scalable "missing icon" icons
+// this is still AI slop, but its good enough
+package missing
 
 import (
 	"fmt"
