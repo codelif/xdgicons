@@ -1,14 +1,20 @@
 # xdgicons
 Go Lookup functions for https://specifications.freedesktop.org/icon-theme-spec/latest/#icon_lookup
 
-Also contains a basic SVG rendering API
+## Features
+- Cached lookups
+- Full spec coverage
+- Contains a basic "missing icon" icon generation API (xdgicons/missing)
+- Contains a basic SVG rendering API (xdgicons/renderer)
 
-## WARNING: This is AI slop
-I wanted to get on with my other projects. And not deal with this spec. So I had this made. Seems to be working p much, though I can't guarantee.
 
-Below are some AI slop examples as well:
+## Installation
 
-### Quick Start
+```bash
+go get github.com/codelif/xdgicons
+```
+
+## Quick Start
 
 ```go
 package main
@@ -21,7 +27,8 @@ import (
 )
 
 func main() {
-    // Create icon lookup instance
+    // Create icon lookup instance with default icon theme (taken from gsettings)
+    // This also sets up directory cache, this call may take a few hundred milliseconds
     iconLookup := xdgicons.NewIconLookup()
     
     // Find an icon
@@ -38,31 +45,17 @@ func main() {
 ### Basic Icon Lookup
 
 ```go
-// Simple lookup with default size (48px)
+// Simple lookup with default size (48px@1)
 iconPath, err := iconLookup.Lookup("folder")
 
-// Lookup with specific size
-iconPath, err := iconLookup.LookupWithSize("folder", 24)
-
 // Full control over size and scale
-iconPath, err := iconLookup.FindIcon("text-editor", 32, 2) // 32px at 2x scale
+icon, err := iconLookup.FindIcon("text-editor", 32, 2) // 32px at 2x scale
+if err == nil {
+    fmt.Println(icon.Path)
+}
 
-// Symbolic icons
-iconPath, err := iconLookup.LookupSymbolic("bluetooth") // Finds bluetooth-symbolic
 ```
 
-### Smart Fallbacks
-
-```go
-// Try multiple icon names with intelligent fallbacks
-iconPath, err := iconLookup.FindBestIconWithFallbacks(
-    []string{"blueman-send-symbolic"}, 48, 1)
-// Will try: blueman-send-symbolic → blueman-send → document-send-symbolic → document-send
-
-// Multiple candidates (useful for MIME types)
-iconPath, err := iconLookup.FindBestIcon(
-    []string{"text-x-python", "text-x-script", "text-plain"}, 48, 1)
-```
 
 ### SVG Icon Rendering
 
@@ -70,11 +63,11 @@ iconPath, err := iconLookup.FindBestIcon(
 import (
     "image/color"
 
-    "github.com/codelif/xdgicons"
+    "github.com/codelif/xdgicons/renderer"
 )
 
 // Create renderer
-renderer := xdgicons.NewIconRenderer(iconLookup)
+renderer := renderer.NewIconRenderer(iconLookup)
 
 // Render SVG to PNG
 img, err := renderer.RenderIconToPNG("firefox", 48)
@@ -89,49 +82,24 @@ img, err := renderer.RenderSymbolicSVGToPNG(
 img, iconPath, err := renderer.RenderIconWithFallback("bluetooth-symbolic", 24, &blueColor)
 ```
 
-### Theme Management
-
+### "Missing Icon" Icon Generation
 ```go
-// Use specific theme
-iconLookup := NewIconLookupWithTheme("Papirus")
+import (
+    "image/color"
 
-// Change theme dynamically
-iconLookup.SetTheme("Adwaita")
+    "github.com/codelif/xdgicons/missing"
+)
 
-// Check current theme
-fmt.Println("Current theme:", iconLookup.GetTheme())
+// Creates a 48x48px image with white foreground and transparent background
+// design is a square box with a X in between. Returns an image.Image
+missingImg := GenerateMissingIcon(48, color.WHITE)
 
-// Set custom icon directories
-iconLookup.SetBaseDirs([]string{
-    "/home/user/.local/share/icons",
-    "/usr/share/icons",
-})
+// Alternate broken glass/window design.
+missingImg2 := GenerateMissingIconBroken(48, color.RED)
+
+// calls to these functions are cached, so they can be called
+// multiple times without any performance implications
 ```
 
-## Debugging Missing Icons
-
-```go
-// Debug why an icon isn't found
-iconPath, searchPaths, err := iconLookup.DebugLookup("missing-icon", 48, 1)
-if err != nil {
-    fmt.Printf("Icon not found. Searched %d paths:\n", len(searchPaths))
-    for i, path := range searchPaths[:5] { // Show first 5
-        fmt.Printf("  %d: %s\n", i+1, path)
-    }
-}
-
-// Get suggestions for alternative names
-suggestions := iconLookup.SuggestIconAlternatives("blueman-send-symbolic")
-fmt.Printf("Try these instead: %v\n", suggestions)
-// Output: [blueman-send document-send mail-send document-send-symbolic ...]
-
-// Debug theme structure
-iconLookup.DebugThemeInfo("hicolor")
-```
-
-## Installation
-
-```bash
-go get github.com/codelif/xdgicons
-```
-
+## Note
+This used to be AI slop, but every line of code has been rewritten by hand (atleast in the `xdgicons` package). This has been done because the AI code was hot garbage.
