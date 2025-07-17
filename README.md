@@ -5,7 +5,6 @@ Go Lookup functions for https://specifications.freedesktop.org/icon-theme-spec/l
 - Cached lookups
 - Full spec coverage
 - Contains a basic "missing icon" icon generation API (xdgicons/missing)
-- Contains a basic SVG rendering API (xdgicons/renderer)
 
 
 ## Installation
@@ -71,32 +70,6 @@ if err != nil {
 }else {
     fmt.Printf("bluetooth-symbolic: %s\n", icon.Path)
 }
-```
-
-
-### SVG Icon Rendering
-
-```go
-import (
-    "image/color"
-
-    "github.com/codelif/xdgicons/renderer"
-)
-
-// Create renderer
-renderer := renderer.NewIconRenderer(iconLookup)
-
-// Render SVG to PNG
-img, err := renderer.RenderIconToPNG("firefox", 48)
-
-// Render symbolic icon with custom color
-blueColor := color.RGBA{0, 120, 215, 255}
-img, err := renderer.RenderSymbolicSVGToPNG(
-    "/usr/share/icons/Adwaita/symbolic/devices/bluetooth-symbolic.svg",
-    32, blueColor)
-
-// Smart rendering with fallbacks
-img, iconPath, err := renderer.RenderIconWithFallback("bluetooth-symbolic", 24, &blueColor)
 ```
 
 ### "Missing Icon" Icon Generation
