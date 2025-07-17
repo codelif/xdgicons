@@ -40,13 +40,12 @@ func (il *IconLookup) cacheBaseDirectory(dirPath string) error {
 		}
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
-  
-  // fmt.Println("caching Base Dir")
-  il.clearThemeInfoCache()
+
+	// fmt.Println("caching Base Dir")
+	il.clearThemeInfoCache()
 	il.dirCache[dirPath] = &baseDirIconCache{
 		files:    files,
 		mtime:    stat.ModTime(),
@@ -55,7 +54,6 @@ func (il *IconLookup) cacheBaseDirectory(dirPath string) error {
 
 	return nil
 }
-
 
 func (il *IconLookup) getThemeInfo(theme string) (ThemeInfo, error) {
 	il.mu.RLock()
@@ -85,7 +83,7 @@ func (il *IconLookup) getThemeInfo(theme string) (ThemeInfo, error) {
 }
 
 func (il *IconLookup) clearThemeInfoCache() {
-  il.themeInfoCache = make(map[string]ThemeInfo)
+	il.themeInfoCache = make(map[string]ThemeInfo)
 }
 
 func (il *IconLookup) shouldRefreshCache(baseDir string, cacheEntry *baseDirIconCache, now time.Time) bool {

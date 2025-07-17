@@ -1,6 +1,5 @@
 package xdgicons
 
-
 // Found Icon
 type Icon struct {
 	// Short name of the icon

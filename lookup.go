@@ -204,7 +204,6 @@ func (il *IconLookup) lookupIcon(iconName string, size int, scale int, theme str
 }
 
 func (il *IconLookup) lookupFallbackIcon(iconName string) (Icon, error) {
-
 	for _, directory := range GetBaseDirs() {
 		for _, extension := range il.extensions {
 			iconPath := path.Join(directory, iconName+"."+extension)
@@ -251,6 +250,7 @@ func (il *IconLookup) fileExists(baseDir, iconPath string) bool {
 
 	return cacheEntry.files[iconPath]
 }
+
 func (il *IconLookup) directoryMatchesSize(themeInfo ThemeInfo, subdir string, iconSize int, iconScale int) bool {
 	subdirInfo := themeInfo.directoryMap[subdir]
 
@@ -300,7 +300,6 @@ func (il *IconLookup) directorySizeDistance(themeInfo ThemeInfo, subdir string, 
 // Finds the first available icon in iconList with the required size and scale.
 // Searches in the order of listing.
 func (il *IconLookup) FindBestIcon(iconList []string, size int, scale int) (Icon, error) {
-
 	icon, err := il.findBestIconHelper(iconList, size, scale, il.theme)
 	if err == nil {
 		return icon, nil

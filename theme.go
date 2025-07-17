@@ -51,15 +51,13 @@ func cleanDconfOutput(raw string) string {
 
 // returns current theme
 func (il *IconLookup) Theme() string {
-  return il.theme
+	return il.theme
 }
 
 // returns fallback theme
 func (il *IconLookup) FallbackTheme() string {
-  return il.fallbackTheme
+	return il.fallbackTheme
 }
-
-
 
 func (il *IconLookup) readThemeIndex(theme, indexPath string) (*ThemeInfo, error) {
 	index, err := ini.Load(indexPath)
@@ -88,15 +86,14 @@ func (il *IconLookup) readThemeIndex(theme, indexPath string) (*ThemeInfo, error
 		directoryMap: make(map[string]SubDirIconInfo),
 	}
 
-
 	inheritsKey, err := iconThemeSection.GetKey("Inherits")
 	if err == nil {
 		themeInfo.Inherits = inheritsKey.Strings(",")
 	}
 
-  if theme != "hicolor" && !slices.Contains(themeInfo.Inherits, "hicolor") {
-    themeInfo.Inherits = slices.Insert(themeInfo.Inherits, len(themeInfo.Inherits), "hicolor")
-  }
+	if theme != "hicolor" && !slices.Contains(themeInfo.Inherits, "hicolor") {
+		themeInfo.Inherits = slices.Insert(themeInfo.Inherits, len(themeInfo.Inherits), "hicolor")
+	}
 
 	scaledDirectorys, err := iconThemeSection.GetKey("ScaledDirectories")
 	if err == nil {
